@@ -19,12 +19,19 @@ You can create a new Conda environment by running the following command:
 ```
 
 # Dataset
+<ul>
+<li> FD-PDC [Link](https://github.com/GZU-SAMLab/LLRL/tree/main/dataset)</li>
+</ul>
 
-
-# Checkpoint
+# PreTrained Model
 
 
 # Inference
+```
+python ./main/mainClassifierVal.py --num_class 6 \
+      --data-path ./datset \
+      --model-path ./weight/resultClassifier/real_model1.pth
+```
 
 
 # Result
