@@ -19,18 +19,34 @@ You can create a new Conda environment by running the following command:
 ```
 
 # Dataset
+Only the test set is publicly available, but the training set will be made public when the paper is accepted.
 <ul>
-<li> FD-PDC [Link](https://github.com/GZU-SAMLab/LLRL/tree/main/dataset)</li>
+<li>(https://github.com/GZU-SAMLab/LLRL/tree/main/dataset)</li>
 </ul>
 
 # PreTrained Model
 
 
+# Train
+Train LGR-Net.
+```
+python ./main/mainBackBone.py \
+        --file_root <The path of healthy-diseased paired images> \
+        --max_steps 40000 \
+        --batch_size 16 --lr 2e-4 --gpu_id 0
+```
+Train HLFA-Net.
+```
+python ./main/mainClassifier.py --num_class 6 --epochs 100 \
+      --data-path ./dataset \
+      --model-path <The path of the weights saved by pre-trained LGR-Net>
+```
+
 # Inference
 ```
 python ./main/mainClassifierVal.py --num_class 6 \
-      --data-path ./datset \
-      --model-path ./weight/resultClassifier/real_model1.pth
+      --data-path ./dataset \
+      --model-path ./weight/real_model1.pth
 ```
 
 
