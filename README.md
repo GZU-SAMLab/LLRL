@@ -28,4 +28,4 @@ You can create a new Conda environment by running the following command:
 
 
 # Result
-![result](img/result.jpg)
+![result](imgs/result.jpg)
