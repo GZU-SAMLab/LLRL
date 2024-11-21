@@ -25,7 +25,7 @@ https://github.com/GZU-SAMLab/LLRL/tree/main/dataset
 </ul>
 
 # PreTrained Model
-The pre-trained ResNet18, LGR-Net, and HLFA-Net models are linked below and can be downloaded in the './weight' folder.
+The pre-trained ResNet18, LGR-Net, and HLFA-Net models are linked below, and download them to the './weight' folder.
 
 # Train
 Train LGR-Net.
