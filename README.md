@@ -21,11 +21,14 @@ You can create a new Conda environment by running the following command:
 # Dataset
 Only the test set of the plant leaf disease severity assessment dataset is publicly available, but the training set will be made public when the paper is accepted. Download the dataset to the './dataset' folder
 <ul>
-https://github.com/GZU-SAMLab/LLRL/tree/main/dataset
+https://drive.google.com/drive/folders/1i2Mg7n8l7X1kB8egwESNqoOSWZFn4pu6?usp=sharing
 </ul>
 
 # PreTrained Model
 The pre-trained ResNet18, LGR-Net, and HLFA-Net models are linked below, and download them to the './weight' folder.
+<Li>ResNet18:https://drive.google.com/file/d/1lwWDrUIiyEMz5o6n_b1NUoR0FEiyqvNg/view?usp=sharing<Li>
+<Li>LGR-Net:https://drive.google.com/file/d/1UWaWBsAHTyj_Su4dah6EfYQaiSQ0dLFm/view?usp=sharing<Li>
+<Li>HLFA-Net:https://drive.google.com/file/d/1OXUGgvMYJ_PbZtfAmuCsseMYFv7MI8sw/view?usp=sharing<Li>
 
 # Train
 Train LGR-Net.
