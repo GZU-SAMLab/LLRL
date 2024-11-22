@@ -7,18 +7,18 @@ from einops import rearrange
 from model.utils import weight_init
 
 def drop_path(x, drop_prob: float = 0., training: bool = False):
-    """随机丢弃路径（Stochastic Depth），在残差块的主路径中每个样本独立应用。"""
+    
     if drop_prob == 0. or not training:
         return x
     keep_prob = 1 - drop_prob
-    shape = (x.shape[0],) + (1,) * (x.ndim - 1)  # 适用于不同维度的张量，而不仅仅是2D卷积网络
+    shape = (x.shape[0],) + (1,) * (x.ndim - 1)  
     random_tensor = keep_prob + torch.rand(shape, dtype=x.dtype, device=x.device)
-    random_tensor.floor_()  # 二值化
+    random_tensor.floor_()  
     output = x.div(keep_prob) * random_tensor
     return output
 
 class DropPath(nn.Module):
-    """随机丢弃路径的模块化实现"""
+    
     def __init__(self, drop_prob=None):
         super(DropPath, self).__init__()
         self.drop_prob = drop_prob
@@ -27,7 +27,7 @@ class DropPath(nn.Module):
         return drop_path(x, self.drop_prob, self.training)
 
 class Mlp(nn.Module):
-    """MLP，作为Vision Transformer、MLP-Mixer及相关网络中的组件"""
+    
     def __init__(self, in_features, hidden_features=None, out_features=None, act_layer=nn.GELU, drop=0.):
         super().__init__()
         out_features = out_features or in_features
@@ -46,7 +46,7 @@ class Mlp(nn.Module):
         return x
 
 class CrossAttention(nn.Module):
-    """跨注意力模块"""
+    
     def __init__(self, dim1, dim2, num_heads=8, qkv_bias=False, attn_drop=0., proj_drop=0.):
         super().__init__()
         self.num_heads = num_heads
@@ -64,19 +64,19 @@ class CrossAttention(nn.Module):
         B1, N1, C1 = x.shape
         B2, N2, C2 = y.shape
 
-        # 计算查询向量
+        
         q = self.q(x).reshape(B1, N1, self.num_heads, C1 // self.num_heads).permute(0, 2, 1, 3)
-        # 计算键和值向量
+        
         kv = self.kv(y).reshape(B2, N2, 2, self.num_heads, C1 // self.num_heads).permute(2, 0, 3, 1, 4)
 
         k, v = kv[0], kv[1]
 
-        # 计算注意力得分
+       
         attn = (q @ k.transpose(-2, -1)) * self.scale
         attn = attn.softmax(dim=-1)
         attn = self.attn_drop(attn)
 
-        # 计算注意力加权输出
+        
         x = (attn @ v).transpose(1, 2).reshape(B1, N1, C1)
 
         x = self.proj(x)
@@ -86,7 +86,7 @@ class CrossAttention(nn.Module):
 
 
 class Block(nn.Module):
-    """基本块，包括归一化、跨注意力和MLP"""
+    
     def __init__(self, dim1, dim2, num_heads, mlp_ratio=4., qkv_bias=False, drop=0., attn_drop=0.,
                  drop_path=0., act_layer=nn.GELU, norm_layer=nn.LayerNorm):
         super().__init__()
@@ -99,25 +99,25 @@ class Block(nn.Module):
         self.mlp = Mlp(in_features=dim1, hidden_features=mlp_hidden_dim, act_layer=act_layer, drop=drop)
 
     def forward(self, x, y):
-        # 残差连接和跨注意力
+        
         x = x + self.drop_path(self.attn(self.norm1(x), self.norm2(y)))
-        # 残差连接和MLP
+        
         x = x + self.drop_path(self.mlp(self.norm3(x)))
         return x
 
 
 class FeatureInjector(nn.Module):
-    """特征注入模块"""
+   
     def __init__(self, dim1=384, dim2=[64, 128, 256], num_heads=8, mlp_ratio=4., qkv_bias=False, drop=0., attn_drop=0.,
                     drop_path=0., act_layer=nn.ReLU, norm_layer=nn.LayerNorm):
         super().__init__()
 
-        # 不同层之间的跨注意力模块
+       
         self.c2_c5 = Block(dim1, dim2[0], num_heads, mlp_ratio, qkv_bias, drop, attn_drop, drop_path, act_layer, norm_layer)
         self.c3_c5 = Block(dim1, dim2[1], num_heads, mlp_ratio, qkv_bias, drop, attn_drop, drop_path, act_layer, norm_layer)
         self.c4_c5 = Block(dim1, dim2[2], num_heads, mlp_ratio, qkv_bias, drop, attn_drop, drop_path, act_layer, norm_layer)
 
-        # 融合层
+       
         self.fuse = nn.Conv2d(dim1*3, dim1, 1, bias=False)
 
         weight_init(self)
@@ -126,13 +126,13 @@ class FeatureInjector(nn.Module):
     def base_forward(self, c2, c3, c4, c5):
         H, W = c5.shape[2:]
 
-        # 调整张量形状
+       
         c2 = rearrange(c2, 'b c h w -> b (h w) c')
         c3 = rearrange(c3, 'b c h w -> b (h w) c')
         c4 = rearrange(c4, 'b c h w -> b (h w) c')
         c5 = rearrange(c5, 'b c h w -> b (h w) c')
 
-        # 通过跨注意力模块
+        
         _c2 = self.c2_c5(c5, c2)
         _c2 = rearrange(_c2, 'b (h w) c -> b c h w', h=H, w=W)
 
@@ -142,70 +142,20 @@ class FeatureInjector(nn.Module):
         _c4 = self.c4_c5(c5, c4)
         _c4 = rearrange(_c4, 'b (h w) c -> b c h w', h=H, w=W)
 
-        # 融合不同层的特征
+        
         _c5 = self.fuse(torch.cat([_c2, _c3, _c4], dim=1))
 
         return _c5
 
     def forward(self, fx, fy):
-        # 计算两个输入特征的融合结果
+        
         _c5x = self.base_forward(fx[0], fx[1], fx[2], fx[3])
         _c5y = self.base_forward(fy[0], fy[1], fy[2], fy[3])
 
         return _c5x, _c5y
-
-# 消融实验特征增强
-class FeatureInjector1(nn.Module):
-    """特征注入模块"""
-    def __init__(self, dim1=384, dim2=[64, 128, 256], num_heads=8, mlp_ratio=4., qkv_bias=False, drop=0., attn_drop=0.,
-                    drop_path=0., act_layer=nn.ReLU, norm_layer=nn.LayerNorm):
-        super().__init__()
-
-        # 不同层之间的跨注意力模块
-        self.c2_c5 = Block(dim1, dim2[0], num_heads, mlp_ratio, qkv_bias, drop, attn_drop, drop_path, act_layer, norm_layer)
-        self.c3_c5 = Block(dim1, dim2[1], num_heads, mlp_ratio, qkv_bias, drop, attn_drop, drop_path, act_layer, norm_layer)
-        self.c4_c5 = Block(dim1, dim2[2], num_heads, mlp_ratio, qkv_bias, drop, attn_drop, drop_path, act_layer, norm_layer)
-
-        # 融合层
-        self.fuse = nn.Conv2d(dim1*3, dim1, 1, bias=False)
-
-        weight_init(self)
-
-
-    def base_forward(self, c2, c3, c4, c5):
-        H, W = c5.shape[2:]
-
-        # 调整张量形状
-        c2 = rearrange(c2, 'b c h w -> b (h w) c')
-        c3 = rearrange(c3, 'b c h w -> b (h w) c')
-        c4 = rearrange(c4, 'b c h w -> b (h w) c')
-        c5 = rearrange(c5, 'b c h w -> b (h w) c')
-
-        # 通过跨注意力模块
-        _c2 = self.c2_c5(c2, c5)
-        _c2 = rearrange(_c2, 'b (h w) c -> b c h w', h=H, w=W)
-
-        _c3 = self.c3_c5(c3, c5)
-        _c3 = rearrange(_c3, 'b (h w) c -> b c h w', h=H, w=W)
-
-        _c4 = self.c4_c5(c4, c5)
-        _c4 = rearrange(_c4, 'b (h w) c -> b c h w', h=H, w=W)
-
-        # 融合不同层的特征
-        _c5 = self.fuse(torch.cat([_c2, _c3, _c4], dim=1))
-
-        return _c5
-
-    def forward(self, fx, fy):
-        # 计算两个输入特征的融合结果
-        _c5x = self.base_forward(fx[0], fx[1], fx[2], fx[3])
-        _c5y = self.base_forward(fy[0], fy[1], fy[2], fy[3])
-
-        return _c5x, _c5y
-
 
 class ResidualBlock(nn.Module):
-    """残差块"""
+    
     def __init__(self, in_channels, out_channels, stride=1):
         super(ResidualBlock, self).__init__()
         self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False)
@@ -277,7 +227,7 @@ class AttentionModule(nn.Module):
         return x
 
 class Classifier(nn.Module):
-    """增强的分类器模块"""
+   
     def __init__(self, in_dim=[64, 128, 256, 512], num_class=6, decay=4):
         super().__init__()
         c2_channel, c3_channel, c4_channel, c5_channel = in_dim
@@ -314,7 +264,7 @@ class Classifier(nn.Module):
         #
         self.AttentionModule = AttentionModule(in_channels=512)
 
-        # 定义多个MLP模块，每个MLP处理不同层的特征
+       
         self.mlp = nn.ModuleList([
             nn.Sequential(
                 nn.Conv2d(dim * 3, dim // decay, 1, bias=False),
@@ -328,7 +278,7 @@ class Classifier(nn.Module):
             ) for dim in in_dim
         ])
 
-        # 增强的分类器头部
+        
         self.conv1 = nn.Conv2d(512, 1024, kernel_size=3, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(1024)
         self.relu = nn.ReLU(inplace=True)
@@ -341,16 +291,16 @@ class Classifier(nn.Module):
 
         c5x, c5y = self.structure_enhance(fx, fy)
 
-        # 下采样到目标大小 [16, 384, 14, 14]
+        
         c2f = self.down_c2(c2x)
         c3f = self.down_c3(c3x)
         c4f = self.down_c4(c4x)
 
-        # 通道注意力+空间注意力
+        
         fused_feature = c2f + c3f + c4f + c5x
         fused_feature = self.AttentionModule(fused_feature)
 
-        # 增强分类器头部的前向传播
+        
         c5x = self.conv1(fused_feature)
         c5x = self.bn1(c5x)
         c5x = self.relu(c5x)
