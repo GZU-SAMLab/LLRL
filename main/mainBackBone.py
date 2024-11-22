@@ -6,11 +6,11 @@ from torch.nn.parallel import gather
 import torch.optim.lr_scheduler
 import os
 
-# 获取当前脚本的目录
+
 current_dir = os.path.dirname(os.path.abspath(__file__))
-# 获取项目根目录
+
 project_root = os.path.dirname(current_dir)
-# 将项目根目录添加到 sys.path
+
 sys.path.append(project_root)
 
 from dataset.Transforms import Normalize, Scale, RandomCropResize, RandomFlip, RandomExchange, ToTensor, Compose
@@ -196,7 +196,6 @@ def trainValidateSegmentation(args):
 
     args.max_epochs = int(np.ceil(args.max_steps / max_batches))
 
-    # 构建保存结果的路径
     args.savedir = os.path.join(args.savedir,
                                 'SumResult_Epoch' + str(args.max_epochs))
 
