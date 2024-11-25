@@ -55,3 +55,6 @@ python ./main/mainClassifierVal.py --num_class 6 \
 
 # Result
 ![result](imgs/result.jpg)
+
+
+The website with relevant details of the paper: http://llrl.samlab.cn/method.html
