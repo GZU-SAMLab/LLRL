@@ -56,7 +56,7 @@ def load_and_test_model(args):
     model_weight_path = args.model_path  
     assert os.path.exists(model_weight_path), f"file {model_weight_path} does not exist."
 
-    net.load_state_dict(torch.load(model_weight_path))
+    net.load_state_dict(torch.load(model_weight_path), strict=False)
     print("Loaded trained model weights.")
 
     
