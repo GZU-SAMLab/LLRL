@@ -1,10 +1,9 @@
-import cv2  # 导入OpenCV库，用于图像处理
-import os  # 导入操作系统相关的库，用于文件和目录操作
-from os.path import join as osp  # 从os.path导入join函数，并重命名为osp，方便路径拼接
-import numpy  # 导入NumPy库，用于数值计算和数组操作
-import torch.utils.data  # 导入PyTorch数据工具，用于创建数据集
+import cv2 
+import os  
+from os.path import join as osp  
+import numpy  
+import torch.utils.data  
 
-# 定义一个继承自torch.utils.data.Dataset的自定义数据集类
 class Dataset(torch.utils.data.Dataset):
     def __init__(self, file_root='data/', mode='train', transform=None):
         # Initialization method. file_root is the root directory of the data, mode is the data mode (e.g., train or test),
