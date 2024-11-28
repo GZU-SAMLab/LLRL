@@ -29,6 +29,10 @@ The pre-trained ResNet18, LGR-Net, and HLFA-Net models are linked below, and dow
 <Li>ResNet18:https://drive.google.com/file/d/1lwWDrUIiyEMz5o6n_b1NUoR0FEiyqvNg/view?usp=sharing
 <Li>LGR-Net:https://drive.google.com/file/d/1UWaWBsAHTyj_Su4dah6EfYQaiSQ0dLFm/view?usp=sharing
 <Li>HLFA-Net:https://drive.google.com/file/d/1OXUGgvMYJ_PbZtfAmuCsseMYFv7MI8sw/view?usp=sharing
+    
+# Attention
+In addition to the above links, you can also download the data set and the pre-training weights in the following links:
+http://llrl.samlab.cn/
 
 # Train
 Train LGR-Net.
