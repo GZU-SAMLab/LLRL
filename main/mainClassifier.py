@@ -7,14 +7,14 @@ import torch.nn as nn
 import torch.optim as optim
 from torchvision import transforms, datasets
 
-# 获取当前脚本的目录
+
 current_dir = os.path.dirname(os.path.abspath(__file__))
-# 获取项目根目录
+
 project_root = os.path.dirname(current_dir)
-# 将项目根目录添加到 sys.path
+
 sys.path.append(project_root)
 
-from model.train import Trainer  # 假设 Trainer 已经封装好了 backbone 和分类头
+from model.train import Trainer  
 
 def main(args):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -34,10 +34,10 @@ def main(args):
                                     transforms.ToTensor(),
                                     transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])}
 
-    data_root = os.path.abspath(os.path.join(os.getcwd(), args.data_path))  # 数据集路径
+    data_root = os.path.abspath(os.path.join(os.getcwd(), args.data_path))  
     assert os.path.exists(data_root), "{} path does not exist.".format(data_root)
 
-    # 加载训练集、验证集和测试集
+    
     train_dataset = datasets.ImageFolder(root=os.path.join(data_root, "train"),
                                          transform=data_transform["train"])
     train_num = len(train_dataset)
@@ -45,12 +45,7 @@ def main(args):
     val_dataset = datasets.ImageFolder(root=os.path.join(data_root, "val"),
                                        transform=data_transform["val"])
     val_num = len(val_dataset)
-
-    test_dataset = datasets.ImageFolder(root=os.path.join(data_root, "test"),
-                                        transform=data_transform["test"])
-    test_num = len(test_dataset)
-
-    # 保存类别索引到 JSON 文件
+    
     class_to_idx = train_dataset.class_to_idx
     cla_dict = dict((val, key) for key, val in class_to_idx.items())
     json_str = json.dumps(cla_dict, indent=4)
@@ -69,32 +64,28 @@ def main(args):
                                              batch_size=batch_size, shuffle=False,
                                              num_workers=nw)
 
-    test_loader = torch.utils.data.DataLoader(test_dataset,
-                                              batch_size=batch_size, shuffle=False,
-                                              num_workers=nw)
+    print("using {} images for training, {} images for validation.".format(train_num, val_num))
 
-    print("using {} images for training, {} images for validation, {} images for test.".format(train_num, val_num, test_num))
-
-    # 实例化 Trainer 模型
+    
     net = Trainer('small', 'classifier', args.num_class)
     net.to(device)
 
-    # 下载并加载预训练权重
-    model_weight_path = args.model_path  # 预训练权重的路径
+    
+    model_weight_path = args.model_path  
     assert os.path.exists(model_weight_path), f"file {model_weight_path} does not exist."
 
-    # 加载预训练权重
+    
     state_dict = torch.load(model_weight_path, map_location=args.device)
 
-    # 过滤掉与 encoder.resnet18.fc 层相关的权重
+    
     filtered_state_dict = {k: v for k, v in state_dict.items()
                            if not (k.startswith('encoder.resnet18.fc') or k.startswith('encoder.resnet.fc'))}
 
-    # 加载权重到模型，strict=False 以忽略缺失的全连接层权重
+    
     net.load_state_dict(filtered_state_dict, strict=False)
     print("Loaded pre-trained weights, excluding encoder.resnet18.fc layer.")
 
-    # 冻结 encoder 和 FeatureInjector 参数
+    
     for name, param in net.encoder.named_parameters():
         param.requires_grad = False
 
@@ -138,18 +129,6 @@ def main(args):
         print('[epoch %d] train_loss: %.3f  val_accuracy: %.3f' %
               (epoch + 1, running_loss / train_steps, val_accurate))
 
-        # 测试模型
-        # net.eval()
-        # test_acc = 0.0
-        # with torch.no_grad():
-        #     for test_data in test_loader:
-        #         test_images, test_labels = test_data
-        #         outputs = net(test_images.to(device), test_images.to(device))
-        #         predict_y = torch.max(outputs, dim=1)[1]
-        #         test_acc += torch.eq(predict_y, test_labels.to(device)).sum().item()
-        # test_accurate = test_acc / test_num
-        # print('now test_accuracy: %.3f' % test_accurate)
-
         if val_accurate > best_acc:
             best_acc = val_accurate
             print(f'best accurate is:{best_acc}')
@@ -157,7 +136,6 @@ def main(args):
 
     print('Finished Training')
 
-    # 加载最好的模型权重进行测试
     net.load_state_dict(torch.load(save_path))
 
 
@@ -184,4 +162,3 @@ if __name__ == '__main__':
     opt = parser.parse_args()
 
     main(opt)
-
