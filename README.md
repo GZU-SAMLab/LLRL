@@ -25,13 +25,7 @@ https://drive.google.com/drive/folders/1i2Mg7n8l7X1kB8egwESNqoOSWZFn4pu6?usp=sha
 </ul>
 
 # PreTrained Model
-The pre-trained ResNet18, LGR-Net, and HLFA-Net models are linked below, and download them to the './weight' folder.
-<Li>ResNet18:https://drive.google.com/file/d/1lwWDrUIiyEMz5o6n_b1NUoR0FEiyqvNg/view?usp=sharing
-<Li>LGR-Net:https://drive.google.com/file/d/1UWaWBsAHTyj_Su4dah6EfYQaiSQ0dLFm/view?usp=sharing
-<Li>HLFA-Net:https://drive.google.com/file/d/1OXUGgvMYJ_PbZtfAmuCsseMYFv7MI8sw/view?usp=sharing
-    
-# Attention
-In addition to the above links, you can also download the data set and the pre-training weights in the following links:
+The pre-trained ResNet18, LGR-Net, and HLFA-Net models are linked below, and download them to the './weight' folder. You can download the data set and the pre-training weights in the following links:
 http://llrl.samlab.cn/
 
 # Train
